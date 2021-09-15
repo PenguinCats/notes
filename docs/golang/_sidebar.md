@@ -11,3 +11,4 @@
   * [反射](golang/反射.md)
   * [并发与通信](golang/并发与通信.md)
   * [错误处理](golang/错误处理.md)
+  * [GC](golang/gc.md)
