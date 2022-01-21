@@ -19,3 +19,7 @@ HTTP 1.1 开始有的。服务器先发送一个质询码，用户用凭证在�
 + token: 服务器验证用户的用户名密码之后，发送一个 token 给客户端，token 内包含用户名等自定义信息。token 的生成过程是私有的。后续的用户活动都需要带上 token，服务器**解析该 token** 来验证请求是否合法，是否有该权限。
 
 需要说明的是，如果 session/token 被盗，服务器是无法阻止的。
+
+## Token Cookie Session
+
+https://www.cnblogs.com/ityouknow/p/10856177.html
