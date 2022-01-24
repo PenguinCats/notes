@@ -438,7 +438,7 @@ DHCP 让网络能够即插即用。工作机制：
 
 用于在本地网络中使用私有地址，在连接互联网时使用全局 IP 地址。除了转换 IP 地址之外，还出现了可以转换 TCP、UDP 端口号的 NAPT(network address port translation)技术。还有 IPv4 和 IPv6 转换的技术。
 
-![](./tcp-ip/IP/nat_1.png)
+<img src="./tcp-ip/IP/nat_1.png" style="zoom:67%;" />
 
 ![](./tcp-ip/IP/nat_2.png)
 
