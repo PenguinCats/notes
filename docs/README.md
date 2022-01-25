@@ -18,7 +18,8 @@
 | --------------- | -------------- |
 | ~~图解HTTP~~      | 2021 寒假 Done |
 | ~~Go 语言核心编程~~ | 2021.4.28 Done |
-| 图解TCP/IP    | reading        |
+| ~~图解TCP/IP~~      | 2022 寒假 Done |
+| Mysql的？           |                |
 
 准备学的东西（动态增删）：
 
@@ -27,5 +28,4 @@
 | ~~Protobuf~~ | 2021.7.2 大致了解，战略性放弃 |
 | ~~WebSocket~~ | 2021.7.7 大致了解，未实战 |
 | 依赖注入 with Go     | pending |
-| RPC with Go | pending |
 | 分布式一致性算 RAFT     | pending |
