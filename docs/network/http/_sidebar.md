@@ -1,5 +1,4 @@
 * [HTTP](network/http/README.md)
-  * [Web及网络基础](network/http/Web及网络基础.md)
   * [HTTP概览](network/http/HTTP概览.md)
   * [HTTP 报文中的 HTTP 信息](network/http/HTTP报文中的HTTP信息.md)
   * [状态码](network/http/状态码.md)
