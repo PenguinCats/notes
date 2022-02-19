@@ -1,9 +1,12 @@
 * 数据存储
+  * [数据库系统原理](datastorage/数据库系统原理/数据库系统原理.md)
+  * [SQL](datastorage/SQL及MySQL/SQL/SQL.md)
+  * [MySQL](datastorage/SQL及MySQL/MySQL/MySQL.md)
   * [MongoDB](datastorage/MongoDB/MongoDB.md)
-  * [etcd](datastorage/etcd/README.md)
+  * [etcd](datastorage/etcd/概述.md)
 * 网络
-  * [HTTP](network/http/README.md)
   * [TCP/IP](network/tcp-ip/README.md)
+  * [HTTP](network/http/README.md)
 * OS
   * [OS](OS/OS/README.md)
   * [Linux](OS/Linux/README.md)
@@ -11,7 +14,7 @@
 * CPP
   * [深度探索cpp对象模型](cpp/深度探索cpp对象模型.md)
 * 零零散散的各种
-  * [零零散散的各种](零零散散的各种/Socket编程和IO复用/Socket编程和IO复用.md)
+  * [Socket编程和IO复用](零零散散的各种/Socket编程和IO复用/Socket编程和IO复用.md)
 * [容器](container/README.md)
   * [Docker](container/docker/README.md)
   * [kubernetes](container/kubernetes/README.md)
