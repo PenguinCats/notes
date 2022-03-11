@@ -3,4 +3,3 @@
 * [SQL](datastorage/SQL及MySQL/SQL/SQL.md)
 * [MySQL](datastorage/SQL及MySQL/MySQL/MySQL.md)
 * [MongoDB](datastorage/MongoDB/MongoDB.md)
-* [etcd](datastorage/etcd/概述.md)
