@@ -10,6 +10,13 @@
 
   TCP 是传送字节流的服务，所以通常使用 read, **recv**, write, **send**。不过使用 sendto, recvfrom 也不是不可以（但是也不能通过 recvfrom 获取地址，因为 connect 的时候已经绑过了，在实现上，就没有给出）
 
+  > listen() 函数：主要作用就是**告知内核**将套接字 (sockfd) 变成被动的连接监听套接字（被动等待客户端的连接），可以通过参数设置内核中连接队列的长度，**TCP 三次握手也不是由这个函数完成，listen() 的作用仅仅告诉内核一些信息。**listen()函数不会阻塞，当有一个客户端主动连接（connect），Linux **内核就自动完成 TCP 三次握手**，将建立好的链接自动存储到**队列**中，如此重复。
+  >
+  >
+  > accept() 函数功能是，从处于 established 状态的连接队列头部取出一个已经完成的连接，如果这个队列没有已经完成的连接，accept() 函数就会阻塞，直到取出队列中已完成的用户连接为止。
+
+  > https://blog.csdn.net/tennysonsky/article/details/45621341/
+  >
   > https://stackoverflow.com/questions/26909982/using-write-read-on-udp-socket
 
   ![img](70.jpeg)
@@ -58,6 +65,8 @@ ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *
 > ```
 
 ### IO 复用
+
+> IO多路复用到底是不是异步的？ - 闪客sun的回答 - 知乎 https://www.zhihu.com/question/59975081/answer/1932776593
 
 IO 复用方式下，单个 process (thread) 可以同时处理多个网络连接的 IO。使用 select，poll，epoll 等调用，不断的轮询相关的的所有 socket，当某个 socket 有数据到达了，就通知用户进程。
 
@@ -189,7 +198,8 @@ else
 epoll 通过两个方面，很好解决了 select/poll 的问题。
 
 + epoll 在**内核里**使用**红黑树来跟踪进程所有待检测的 sockfd**，把需要监控的 socket 通过 `epoll_ctl()` 函数加入内核中的红黑树里。红黑树是个高效的数据结构，增删查一般时间复杂度是 `O(logn)`，通过对这棵黑红树进行操作，这样就不需要像 select/poll 每次操作时都传入整个 socket 集合，只需要传入一个待检测的 socket，减少了内核和用户空间大量的数据拷贝和内存分配。
-+ epoll 使用事件驱动的机制，内核里**维护了一个链表来记录就绪事件**，当某个 socket 有事件发生时，内核会将其加入到这个就绪事件列表中，当用户调用 `epoll_wait()` 函数时，只会返回有事件发生的 sockfd，不需要像 select/poll 那样轮询扫描整个 socket 集合，大大提高了检测的效率。
++ epoll 使用事件驱动的机制，内核里**维护了一个链表来记录就绪事件**，当某个 socket 有事件发生时，内核会将其加入到这个就绪事件列表中。内核不再通过轮询的方式找到就绪的文件描述符，而是通过异步 IO 事件唤醒。
++ 当用户调用 `epoll_wait()` 函数时，只会从就绪列表中取出有事件发生的 sockfd，不需要像 select/poll 那样轮询扫描整个 socket 集合，大大提高了检测的效率。
 
 ![image-20220215102741802](image-20220215102741802.png)
 
