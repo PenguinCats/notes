@@ -1,6 +1,7 @@
 + 零零散散的各种
   * [Socket编程和IO复用](零零散散的各种/Socket编程和IO复用/Socket编程和IO复用.md)
   * [并发](零零散散的各种/并发/并发.md)
+  * [设计模式](零零散散的各种/设计模式/设计模式.md)
   * [Raft](零零散散的各种/Raft/Raft.md)
   * [RPC](零零散散的各种/RPC/RPC.md)
   * [微服务与etcd](零零散散的各种/微服务与etcd/微服务与etcd.md)
