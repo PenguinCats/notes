@@ -69,3 +69,26 @@ Session 机制准确来说，也是通过 K-V 数据格式来保存状态。其�
 <img src="v2-8acae7d043476c47143a9a4b5e2782f9_r.jpg" alt="preview" style="zoom:67%;" />
 
 ![img](v2-ed6c8498fd74cc60f16f897922ee040e_720w.jpg)
+
+### OpenID & OAuth
+
+> OpenID 和 OAuth 有什么区别？ - biaodianfu的回答 - 知乎 https://www.zhihu.com/question/19628327/answer/23291315
+
+#### OpenID：用于认证
+
+1. 用户希望访问其在http://example.com的账户
+2. http://[example.com](https://www.zhihu.com/search?q=example.com&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"answer"%2C"sourceId"%3A"23291315"}) (在OpenID的黑话里面被称为“Relying Party”) 提示用户输入他/她/它的OpenID
+3. 用户给出了他的OpenID，比如说”[http://user.myopenid.com](https://link.zhihu.com/?target=http%3A//user.myopenid.com)”
+4. http://example.com 跳转到了用户的OpenID提供商“mypopenid.com”
+5. 用户在”myopenid.com”(OpenID provider)提示的界面上输入用户名密码登录
+6. “myopenid.com” (OpenID provider) 问用户是否要登录到http://example.com
+7. 用户同意后，”myopenid.com” (OpenID provider) 跳转回http://example.com
+8. http://example.com 允许用户访问其帐号
+
+> 国内不普遍噢
+>
+> OpenID不具备普遍的使用性，大家还得去注册一个OpenID才能用上这个接口登录。。。国内来说:QQ号码如果作为OpenID将会有很大的潜力
+
+#### OAuth：用于授权
+
+![img](oauth-2.png)
