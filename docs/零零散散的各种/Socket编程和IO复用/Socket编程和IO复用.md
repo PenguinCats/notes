@@ -281,6 +281,119 @@ poll **没有最大描述符数量的限制**，如果平台支持并且对实�
 
 如果需要监控的描述符状态变化多，而且都是非常短暂的，也没有必要使用 epoll。因为 epoll 中的所有描述符都存储在内核中，造成每次需要对描述符的状态改变都需要通过 epoll_ctl() 进行系统调用，频繁系统调用降低效率。并且 epoll 的描述符存储在内核，不容易调试。
 
+### epoll 的简要工作流程
+
+> 深入揭秘 epoll 是如何实现 IO 多路复用的 - 腾讯技术工程的文章 - 知乎 https://zhuanlan.zhihu.com/p/487497556
+
+![img](v2-cf92cbbce0b44eab29291fc3702201a4_1440w.jpg)
+
+#### 开始监听一系列 socket
+
+若要监听一个 socket，会创建一个关联 socket 和 event_poll rb_tree 的中间结构 `epitem`。socket 和 eventpoll rb_tree 可以通过 `epitem` 互相找到对方。之所以使用红黑树，是因为添加删除相对较快、也方便通过 fd 的值快速找到相关节点。
+
+![img](v2-8c2ae92d21fce01ec2f639fe7d3759ab_1440w.jpg)
+
+具体来说分为三步：
+
+1. 生成关联的 epitem
+2. 在 socket 的等待队列中注册回调函数。（socket 需要在数据就绪的时候唤醒等待该 socket 的进程，此处我们选择唤醒 epoll 的回调函数，告知 epoll 有 socket 能用了）
+3. 将 epitem 插入到红黑树中
+
+```c
+//file: fs/eventpoll.c
+static int ep_insert(struct eventpoll *ep, struct epoll_event *event, struct file *tfile, int fd) {
+    //3.1 分配并初始化 epitem
+    //分配一个epi对象
+    struct epitem *epi;
+    if (!(epi = kmem_cache_alloc(epi_cache, GFP_KERNEL)))
+        return -ENOMEM;
+
+    //对分配的epi进行初始化
+    //epi->ffd中存了句柄号和struct file对象地址
+    INIT_LIST_HEAD(&epi->pwqlist);
+    epi->ep = ep;
+    ep_set_ffd(&epi->ffd, tfile, fd);
+
+    //3.2 设置 socket 等待队列
+    //定义并初始化 ep_pqueue 对象
+    struct ep_pqueue epq;
+    epq.epi = epi;
+    init_poll_funcptr(&epq.pt, ep_ptable_queue_proc);
+
+    //调用 ep_ptable_queue_proc 注册回调函数
+    //实际注入的函数为 ep_poll_callback
+    revents = ep_item_poll(epi, &epq.pt);
+
+    ......
+    //3.3 将epi插入到 eventpoll 对象中的红黑树中
+    ep_rbtree_insert(ep, epi);
+    ......
+}
+```
+
+#### epoll_wait 等待能用的 socket
+
+![img](v2-df1b90593fbe8e3ef77280333d762223_1440w.jpg)
+
+- **wq：** 等待队列链表。软中断数据就绪的时候会通过 wq 来找到阻塞在 epoll 对象上的用户进程。
+- **rbr：** 一棵红黑树。为了支持对海量连接的高效查找、插入和删除，eventpoll 内部使用了一棵红黑树。通过这棵树来管理用户进程下添加进来的所有 socket 连接。
+- **rdllist：** 就绪的描述符的链表。当有的连接就绪的时候，内核会把就绪的连接放到 rdllist 链表里。这样应用进程只需要判断链表就能找出就绪进程，而不用去遍历整棵树。
+
+epoll_wait 做的事情不复杂，当它被调用时它观察 eventpoll->rdllist 链表里有没有数据即可。有数据就返回，没有数据就创建一个等待队列项，将其添加到 eventpoll 的等待队列上，然后把自己阻塞掉就完事。
+
+![img](v2-85e9e9f7d042469ca4a3e71aeaee867a_1440w.jpg)
+
+> 注意：epoll_ctl 添加 socket 时也创建了等待队列项。不同的是这里的等待队列项是挂在 epoll 对象上的，而前者是挂在 socket 对象上的。
+
+#### 接收到数据的处理
+
+关于软中断是怎么处理网络帧的暂且不谈。总之，socket 的数据接受完之后，会唤醒等待队列中阻塞的进程。
+
+```c
+//file: net/ipv4/tcp_input.c
+int tcp_rcv_established(struct sock *sk, struct sk_buff *skb,
+            const struct tcphdr *th, unsigned int len)
+{
+    ......
+
+    //接收数据到队列中
+    eaten = tcp_queue_rcv(sk, skb, tcp_header_len,
+                                    &fragstolen);
+
+    //数据 ready，唤醒 socket 上阻塞掉的进程
+    sk->sk_data_ready(sk, 0);
+```
+
+实际上，唤醒的就是 epoll_ctl 添加 socket 时在其上设置的回调函数 ep_poll_callback
+
+![img](v2-10689ba69144589748abb5bd82cd949b_1440w.jpg)
+
+执行 ep_poll callback 回调函数具体会：
+
+1. 把自己的 epitem 添加到 epoll 的就绪队列中。
+
+2. 查看 eventpoll 对象上的等待队列里是否有等待项（epoll_wait 执行的时候会设置）。如果有等待项，那就查找到等待项里设置的回调函数。总之会唤醒阻塞的用户进程。
+
+   ![img](v2-4a4abcce05720f330679103150d26f43_1440w.jpg)
+
+```c
+//file: fs/eventpoll.c
+static int ep_poll_callback(wait_queue_t *wait, unsigned mode, int sync, void *key)
+{
+    //获取 wait 对应的 epitem
+    struct epitem *epi = ep_item_from_wait(wait);
+
+    //获取 epitem 对应的 eventpoll 结构体
+    struct eventpoll *ep = epi->ep;
+
+    //1. 将当前epitem 添加到 eventpoll 的就绪队列中
+    list_add_tail(&epi->rdllink, &ep->rdllist);
+
+    //2. 查看 eventpoll 的等待队列上是否有在等待
+    if (waitqueue_active(&ep->wq))
+        wake_up_locked(&ep->wq);
+```
+
 ## 网路编程模型（不仅考虑了 IO）
 
 ### 阻塞IO+多线程
