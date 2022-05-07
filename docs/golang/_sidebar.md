@@ -1,5 +1,5 @@
 * [Golang](golang/README.md)
-  * [面试可能问的高阶知识](golang/面试可能问的高阶知识.md)
+  * [面试可能问的知识](golang/面试可能问的知识.md)
   * [7days-golang: 网络通信与Web框架](golang/网络通信与Web框架.md)
   * [7days-golang: 分布式缓存](golang/分布式缓存.md)
   * [开发记事](golang/开发记事.md)
