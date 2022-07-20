@@ -4,7 +4,7 @@ MySQL
 
 存储引擎是对**底层物理数据**执行实际操作的组件，为 Server 服务层提供各种操作数据的 API。常用的存储引擎有 InnoDB、MyISAM、Memory。
 
-### InnoDB 
+### InnoDB
 
 > in-no-DB
 
@@ -80,9 +80,9 @@ InnoDB 将一个**索引的节点的大小设置为一页的大小**，这样从
 > 一次磁盘 IO 读一页而不是一个字节是因为 磁盘的预读特性。为了提高效率，要尽量减少磁盘I/O。为了达到这个目的，磁盘往往不是严格按需读取，而是每次都会预读，即使只需要一个字节，磁盘也会从这个位置开始，顺序向后读取一定长度的数据放入主存，这个长度就是一个磁盘块。
 
 > https://dba.stackexchange.com/questions/224969/what-is-the-relation-between-mysql-pages-and-operating-system-pages
->
+> 
 > https://dev.mysql.com/doc/refman/5.7/en/optimizing-innodb-diskio.html
->
+> 
 > https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html#sysvar_innodb_page_size
 
 ###### B & B+
@@ -92,7 +92,7 @@ InnoDB 将一个**索引的节点的大小设置为一页的大小**，这样从
 + B+ 树一定要查到叶子节点，所以查询效率稳定
 
 > 什么MongoDB用B树而不是B+树？
->
+> 
 > MongoDB 作为面向文档的数据库，与数据之间的关系相比，它更看重以文档为中心的组织方式，所以选择了查询**单个文档性能较好的** **B** **树**（因为不用查到叶子节点了吧，可能中间就返回了吧），这个选择对遍历数据的查询也可以保证可以接受的时延；
 
 ###### 与红黑树的比较
@@ -108,9 +108,9 @@ InnoDB 将一个**索引的节点的大小设置为一页的大小**，这样从
 哈希索引能以 O(1) 时间进行查找，但是：
 
 - 只支持精确查找，**无法用于范围查找，也不能高性能的排序和分组。**
-
+  
   例如WHERE price > 100。由于 Hash 索引比较的是进行 Hash 运算之后的 Hash 值，所以它只能用于等值的过滤，不能用于基于范围的过滤，**因为经过相应的 Hash 算法处理之后的 Hash 值的大小关系，并不能保证和 Hash 运算前完全一样。（那么这些 Hash 记录可能在不同的盘块上，要一个一个读进来）**
-
+  
   （甚至后面加间隙锁等等都不好操作）
 
 - 数据量大了之后，那么将会存在大量记录指针信息存于同一个 Hash 值相关联。**查询性能受 hash 冲突率影响，性能不稳定**。【碰撞之后要遍历了啊！遍历！】
@@ -146,9 +146,9 @@ MyISAM 存储引擎支持空间数据索引（R-Tree），可以用于地理数�
 最左优先，以最左边的为起点任何连续的索引都能匹配上。同时遇到范围查询 (>、<、between、like) 就会停止匹配。
 
 > 例如：如果建立 (a, b) 顺序的索引，我们的条件只有 b=xxx，是匹配不到 (a, b) 索引的
->
+> 
 > 但是如果查询条件是 a = 1 and b = 2 或者 b=2 and a=1就可以，因为优化器会自动调整 a, b 的顺序，并不需要严格按照索引的顺序来
->
+> 
 > 再比如查询 a = 1 and b = 2 and c > 3 and d = 4 如果建立(*a, b, c, d*)顺序的索引，d 是用不到索引的，因为 c 字段是一个范围查询，它之后的字段会停止匹配。
 
 #### 聚簇索引
@@ -219,20 +219,20 @@ MyISAM 存储引擎支持空间数据索引（R-Tree），可以用于地理数�
 - 为每个分片指定一个 ID 范围
 
 - 分布式 ID 生成器 (如 Twitter 的 Snowflake 算法)
-
+  
   > <img src="v2-b3a91b9e3f6468be39f3dc3345e9f4f2_720w.jpg" alt="img" style="zoom: 67%;" />
-  >
+  > 
   > 1. 1bit-不用，因为二进制中最高位是符号位，1 表示负数，0 表示正数。生成的 id 一般都是用整数，所以最高位固定为 0
   > 2. 41bit-时间戳，用来记录时间戳，毫秒级，可以使用 (1L << 41) / (1000L * 60 * 60 * 24 * 365) = 69年
   > 3. 10bit-工作机器id，用来记录工作机器 id，最大1024个节点
   > 4. 12bit-序列号，用来记录同毫秒内产生的不同id，最多4096个/毫秒
-  >
+  > 
   > 在获取时间的时候，可能会出现时间回拨的问题：服务器上的时间突然倒退到之前的时间。解决方案：
-  >
+  > 
   > + 回拨时间小的时候，不生成 ID，循环等待到时间点到达。
-  >
+  > 
   > + 69 年的时间太长了，没意义，拆几位下来用【机器数量太多的时候也可以拆几位下来】
-  >
+  >   
   >   <img src="format,png.png" alt="img" style="zoom: 67%;" />
 
 ### 分区、分表、分库
@@ -244,7 +244,7 @@ MyISAM 存储引擎支持空间数据索引（R-Tree），可以用于地理数�
 ## 主从复制 & 读写分离
 
 > MySQL主从复制读写分离，看这篇就够了！ - 阿里技术的文章 - 知乎 https://zhuanlan.zhihu.com/p/199217698
->
+> 
 > 【152期】面试官：你能说出MySQL主从复制的几种复制方式吗？ - 小知的文章 - 知乎 https://zhuanlan.zhihu.com/p/189404442
 
 主从复制、读写分离一般是一起使用的。目的很简单，就是**为了提高数据库的并发性能**。
@@ -262,37 +262,37 @@ MyISAM 存储引擎支持空间数据索引（R-Tree），可以用于地理数�
 主从复制的几种模式：
 
 + **异步复制【默认】**
-
+  
   数据的完整性依赖于主库 BINLOG 的不丢失，只要主库的 BINLOG 不丢失，那么就算主库宕机了，我们还可以通过 BINLOG 把丢失的部分数据通过手工同步到从库上去。
-
+  
   MySQL 在 BINLOG 中记录事务(或SQL语句)。对于支持事务的的引擎（例如InnoDB）来说，每个事务提交时都需要写 BINLOG；对于不支持事务的引擎（例如MyISAM）来说，每个 SQL 语句执行完成时，都需要写 BINLOG。为了保证 Binlog 的安全，MySQL 可以控制BINLOG刷新到磁盘的频率：
-
+  
   + **在默认情况下，事务提交之前，MySQL 都需要先把 BINLOG 刷新到磁盘。**这样的话，即使出现数据库主机操作系统崩溃或者主机突然掉电的情况，系统最多损失 prepared 状态的事务【但是恢复起来不方便的样子？】
   + N 次事务 commit 之后才落盘
   + MySQL 不控制 binlog 的刷新，由文件系统自己控制文件缓存的刷新
-
+  
   > 对应一个全同步复制，太拉跨了，应该不会用吧
-  >
+  > 
   > 指当主库执行完一个事务，所有的从库都执行了该事务才返回给客户端。因为需要等待所有从库执行完该事务才能返回，所以全同步复制的性能必然会收到严重的影响。
 
 + **多线程复制**
-
+  
   **较旧的版本：**当有多个库时多个库可以并行进行复制，而库与库之间互不干扰。但多数情况下，可能只有单schema，即只有单个库。其核心思想是：不同 schema 下的表并发提交时的数据不会相互影响，即 slave 节点可以用对 relay log 中不同的 schema 各分配一个类似 SQL 功能的线程，来重放 relay log 中主库已经提交的事务，保持数据与主库一致。
-
+  
   **新一点的版本：**一个组提交的事务都是可以并行回放。想法是这样的：在主库上同时提交的事务设置成相同的 commit_id。在备库上 apply 时，相同的 commit_id 可以并行执行，因为这意味着这些事务之间是没有行冲突的（否则不可能同时提交）。
-
+  
   slave机器的relay log中 last_committed相同的事务（sequence_num不同）可以并发执行。
-
+  
   <img src="v2-2462046c52ae2f7c4a0739c5aaeb1171_r.jpg" alt="preview" style="zoom:50%;" />
 
 + **增强半同步复制**
-
+  
   半同步复制时，主库在每次事务成功提交时，并不及时反馈给应用用户，而是等待至少一个从库（数量可以调整）也接收到 BINLOG 事务并成功写入中继日志 Relay Log 后，主库才返回 Commit 操作成功给客户端。
-
+  
   这其实就是**两阶段提交**。master 节点 commit 的时候，slave 已经读取了 master 的完整 bin log。即使此时 master 宕机，slave 节点也能通过重放，实现和 master 节点的数据同步。
-
+  
   假如在传送 BINLOG 日志到从库时，从库宕机或者网络延迟，导致 BINLOG 并没有即使地传送到从库上，此时主库上的事务会等待一段时间，如果 BINLOG 在这段时间内都无法成功发送到从库上，则 MySQL 自动调整为异步复制模式，事务正常返回提交结果给客户端。
-
+  
   ![img](v2-5f1c042aeeb3610d5fadf2c281e258f1_b.jpg)
 
 ### 读写分离
@@ -318,7 +318,7 @@ MyISAM 存储引擎支持空间数据索引（R-Tree），可以用于地理数�
 2. 备库除了正常读业务，有其他业务
 
 3. **大事务**
-
+   
    如果是处理大事务（比如 delete 很多东西），执行时间比较长（比如 5分钟）。虽然备库很快拿到 binlog，但是在`备库回放执行也要花费差不多的时间`，从而导致主备延迟很大。
 
 怎么办：
@@ -341,7 +341,7 @@ MyISAM 存储引擎支持空间数据索引（R-Tree），可以用于地理数�
 #### keepalived 工作原理
 
 > keepalived工作原理是什么？怎么保证高可用呢？ - 码海的回答 - 知乎 https://www.zhihu.com/question/34822368/answer/2126403039
->
+> 
 > keepalived工作原理是什么？怎么保证高可用呢？ - 谢昌富的回答 - 知乎 https://www.zhihu.com/question/34822368/answer/123183594
 
 keepalived 是以 VRRP (Virtual Router Redundancy Protocol，虚拟路由冗余协议) 协议为实现基础的。
@@ -417,7 +417,7 @@ TEXT类型一般分为 TINYTEXT(255长度)、TEXT(65535)、 MEDIUMTEXT（int最�
 ## 性能优化【能看多少是多少，以后再说】
 
 > 优化顺序
->
+> 
 > + 第一优化你的sql和索引
 > + 第二加缓存，memcached,redis；
 > + 第三以上都做了后，还是慢，就做主从复制或主主复制，读写分离。
@@ -436,11 +436,11 @@ Explain 用来分析 SELECT 查询语句，开发人员可以通过分析 Explai
 - select_type : 查询类型，有简单查询、联合查询、子查询等
 
 - type：该列称为**关联类型或者访问类型**，它指明了MySQL决定如何查找表中符合条件的行，同时**是我们判断查询是否高效的重要依据**。包括但不限于：
-
+  
   ALL：**[全表扫描](https://www.zhihu.com/search?q=全表扫描&search_source=Entity&hybrid_search_source=Entity&hybrid_search_extra={"sourceType"%3A"article"%2C"sourceId"%3A"51771446"})**，这个类型是性能最差的查询之一。通常来说，我们的查询不应该出现 ALL 类型，因为这样的查询，在数据量最大的情况下，对数据库的性能是巨大的灾难。
-
+  
   index：**全索引扫描**，和 ALL 类型类似，只不过 ALL 类型是全表扫描，而 index 类型是**扫描全部的索引**，主要优点是**避免了排序**，但是开销仍然非常大。如果在 Extra 列看到 Using index，说明正在使用覆盖索引，只扫描索引的数据，开销要少很多。
-
+  
   range：**范围扫描**，就是一个有限制的索引扫描。这个类型通常出现在 `=、<>、>、>=、<、<=、IS NULL、<=>、BETWEEN、IN()` 的操作中，key 列显示使用了哪个索引。
 
 - key : 使用的索引
@@ -500,7 +500,6 @@ SELECT * FROM tag WHERE tag='mysql';
 SELECT * FROM tag_post WHERE tag_id=1234;
 SELECT * FROM post WHERE post.id IN (123,456,567,9098,8904);
 ```
-
 
 ### 索引优化
 
@@ -595,11 +594,11 @@ insert buffer 主要是在 insert, update, delete 操作时，加快对非聚簇
 + 若在，则直接插入；若不在，则先放入到一个 Insert Buffer对象中。（insert buffer 本身也像数据页一样，也可能被回刷到磁盘持久化（比如要修改的索引页不在内存中，就可以先把 insert buffer 持久化），也受到 redo log 保护）
 
 + InnoDB 会以一定的频率和情况进行 Insert Buffer 和辅助索引页子节点的 **Merge**（合并）操作。Merge 操作可能发生的情况：
-
+  
   + 对应的辅助索引页子节点读取到缓冲池中
   + 检测到对应的辅助索引页没有可用空间了（插不下了，可能要拆到别的页里）
   + Master Thread 周期性更新
-
+  
   > 相当于将多个叶子节点插入操作合并到一个操作中（如果在一个辅助索引子节点那自然是最好，如果不在的话，也可以先存着这次记录，等那个页面来了之后再合并），这就大大提高了辅助索引的修改性能
 
 启用条件
@@ -622,9 +621,9 @@ insert buffer 主要是在 insert, update, delete 操作时，加快对非聚簇
 InnoDB 的一页**由多个磁盘扇区组成**，在刷盘操作的时候，可能出现：只写了其中一些磁盘扇区，剩下的扇区没写完的时候宕机了。这种时候，这个数据页只写了一半，称为 partial page write。此时重启后，磁盘上是不完整的数据页，也没法借助 redo log 恢复。这时候这一页数据就丢了啊！
 
 > 为什么 redo log 无法恢复损坏的数据页？
->
+> 
 > redo log 中记录的是对页的物理操作，如哪一页哪一行改了什么。而且改的东西除了数据本身，还包括索引啊，页的统计信息等内容。
->
+> 
 > 如果这个页本身是损坏的，再重做是没有意义的。（可能你不知道这一页执行到 redo log 中的哪一步了）redo log 要在一个完整的、没损坏的旧数据页上执行 redo 才有意义。
 
 怎么解决？给这个页再搞个备份！
@@ -632,9 +631,9 @@ InnoDB 的一页**由多个磁盘扇区组成**，在刷盘操作的时候，可
 + 要将脏页落盘时，先将脏页复制到 double write buffer 中
 
 + double write buffer 落盘【**顺序写入**到共享表空间指定地点】【需要立即调用 fsync 同步】
-
+  
   （并不是占满了整个 double write buffer 的全部空间 2M，也不是把整个 double write buffer 空间全部写磁盘。用多少写多少。）
-
+  
   （double write buffer 里面可能有好几个页，这些页可能是离散的。但写道磁盘上的 double write buffer 对应的段的时候，是顺序写入在里面的）
 
 + 然后再正常将脏页落盘
@@ -717,41 +716,37 @@ MySQL 是这样做的：进入到 young 区域条件增加了一个**停留在 o
 
 另外，MySQL 针对 young 区域其实做了一个优化，为了防止 young 区域节点频繁移动到头部。young 区域前面 1/4 被访问不会移动到链表头部，只有后面的 3/4 被访问了才会。
 
-
-
-
-
 ## Innodb 的后台线程
 
 > 浅析 InnoDB 存储引擎的工作流程 - 小芳芳的文章 - 知乎 https://zhuanlan.zhihu.com/p/48296142
->
+> 
 >  MySQL我了解得不是深？！MySQL底层-InnoDB缓冲池底层原理分析，就问你深不深 - 高级架构师Winner的文章 - 知乎 https://zhuanlan.zhihu.com/p/277553830
 
 <img src="v2-b8d737e30a5c7d8a1c300cd8d09689ec_1440w.jpg" alt="img" style="zoom: 50%;" />
 
 1. IO Thread
-
+   
    在 InnoDB 中使用了大量的 AIO（异步输入/输出）来做读写处理，可以极大提高数据库的性能。一共有 4 种IO Thread，分别为 write、read、insert buffer 和 log 对应的 thread。
-
+   
    - read thread（4个）：负责读取操作，将数据从磁盘加载到 Buffer Pool 的 Page 页。
    - write thread（4个）：负责写操作，将 Buffer Pool 的 dirty page 刷新到磁盘。
    - log thread（1个）：负责将 Log Buffer 内容刷新到磁盘。
    - change buffer thread（1个）：负责将 Change Buffer 内容刷新到磁盘。
 
 2. Purge Thread
-
+   
    事务提交之后，其使用的 Undo Log 将不再需要，需要 Purge Thread 回收已经分配的 Undo Page。
 
 3. Page Cleaner Thread
-
+   
    将脏页刷新到磁盘，脏页刷盘后相应的 Redo Log 也就可以覆盖，即可以同步数据，又能达到 Redo Log 循环使用的目的。
-
+   
    调用 write thread 线程处理。
 
 4. Master Thread
-
+   
    InnoDB 的主线程，负责调度其他各线程，优先级最高。
-
+   
    作用是将 Buffer Pool中 的数据异步刷新到磁盘，保证数据的一致性。包含：脏页的刷新（Page Cleaner Thread）、Undo 页回收（Purge Thread）、Redo Log 刷新（log thread）、合并 Change Buffer 等。
 
 ## Innodb 的其他特性
