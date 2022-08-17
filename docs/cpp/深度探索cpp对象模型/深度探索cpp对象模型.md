@@ -49,7 +49,7 @@ cpp有 static 和 non-static 两种成员数据； static、non-static 和 virtu
   + 为什么直接将 derived object 赋值给 base object 对象时， base object 的 vptr 不指向 derived class 的 vtbl 呢？（因为编译器要保证，在初始化或assignment时，某 object 的 vptr 的内容不会因为 base class 的初始化而改变，这个 object 的类型应该是固定的定死的。这和下面提到的支持多态的思想是相符的）
   + 为什么直接将 derived object 赋值给 base object 对象时，不能调用子类实现的虚函数咧？（vtbl 找不到了啊！背后的原因是 --> 支持多态的思想是：改变指针（或引用）指向的内存的大小及其解释方式，而不是改变内存内容。基于这个思想，derived object 赋值给 base object 的时候，内存会被切割裁剪，以便能塞进 base type 的内存。此时 derived type 不会留下任何痕迹，编译器会回避 virtual 机制）
 
-# 构造函数 语义学 
+# 构造函数 语义学
 
 # Data 语义学 *
 
@@ -60,4 +60,3 @@ cpp有 static 和 non-static 两种成员数据； static、non-static 和 virtu
 # 执行器语义学
 
 # 紫禁之巅 （错误处理、泛型、类型推断）
-

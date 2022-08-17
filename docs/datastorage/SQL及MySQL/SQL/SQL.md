@@ -4,7 +4,7 @@
 
 ![1.png](1623029150-HoIqOw-1.png)
 
-### row_number() 
+### row_number()
 
 在排名是序号 连续 不重复，即使遇到表中的两个一样的数值亦是如此
 
@@ -37,7 +37,7 @@ from num
 
 ![5.png](1623029200-APlyUj-5.png)
 
-### ntile(group_num) 
+### ntile(group_num)
 
 将所有记录切分成 group_num 个组，每组序号一样
 
@@ -49,9 +49,9 @@ from num
 ![6.png](1623029213-kgvvyl-6.png)
 
 > 如果分区行的数量不能被整除`n`，则`NTILE()`函数将生成两个大小的组，差异为1。较大的组总是以`ORDER BY`子句指定的顺序位于较小的组之前。
->
+> 
 > 例如
->
+> 
 > ```sql
 > +-----+
 > | val |
@@ -74,7 +74,7 @@ from num
 >     ) group_no
 > FROM 
 >     ntileDemo; 
->     
+> 
 > +-----+----------+
 > | val | group_no |
 > +-----+----------+
@@ -99,7 +99,7 @@ from num
 + SQL 语句不区分大小写（尤其是各类指令），但是数据库表名、列名和值是否区分依赖于具体的 DBMS 以及配置。
 
 > 主键的值不允许修改，也不允许复用（不能将已经删除的主键值赋给新数据行的主键）。
->
+> 
 > 我试了一下其实是可以的，大概是以前旧版本的规定吧
 
 + SQL 支持以下三种注释：
@@ -120,11 +120,11 @@ USE test;
 ```
 
 + SQL 的语言编写规范
-
+  
   https://blog.csdn.net/qq_34100655/article/details/82904797
 
 + SELECT 字句的书写顺序
-
+  
   ```sql
   SELECT * FROM * WHERE * GROUP BY * HAVING * ORDER BY * LIMIT
   ```
@@ -152,7 +152,7 @@ USE test;
 
 ```sql
 CREATE TABLE mytable(
-	id INT NOT NULL AUTO_INCREMENT,
+    id INT NOT NULL AUTO_INCREMENT,
     col1 INT NOT NULL DEFAULT 1,
     col2 VARCHAR(45) NULL,
     col3 DATE NULL,
@@ -165,15 +165,15 @@ CREATE TABLE mytable(
 <img src="image-20220216160453170.png" alt="image-20220216160453170" style="zoom:33%;" />
 
 + NULL：NULL 是没有值，不是空串
+
 + AUTO_INCREMENT：
+  
   + 可以简单地在INSERT语句 中指定一个值，只要它是唯一的（至今尚未使用过）即可，该值将被用来替代自动生成的值。后续的增量将开始使用该手工 插入的值。
   + 可使用last_insert_id() 函数获得这个值
+
 + 默认值：Mysql 只支持常量默认值，有些 DBMS 则支持函数
 
 + 引擎类型：如果省略则使用默认引擎（Mysql 5.1 之后是 innoDB）
-
-
-
 2. 利用别的数据建表，创建表和数据插入同步完成，是数据操纵语言DML
 
 ```sql
@@ -211,7 +211,7 @@ DROP TABLE mytable;
 
 ```sql
 RENAME TABLE backup_customers To customers,
-			 backup_vendors TO vendors,
+             backup_vendors TO vendors,
              backup_products TO products;
 ```
 
@@ -226,7 +226,7 @@ INSERT INTO mytable(col1, col2) VALUES (val1, val2);
 也可以不指定列名，按顺序给出，但不推荐，万一表中列的顺序修改了呢。
 
 > 可以一次性插入多行，比一行一行加入性能高
->
+> 
 > ```sql
 > INSERT INTO mytable(col1, col2) VALUES (val1, val2), (val1, val2), (val1, val2);
 > ```
@@ -235,7 +235,7 @@ INSERT INTO mytable(col1, col2) VALUES (val1, val2);
 
 ```sql
 INSERT INTO mytable(col1, col2)
-	SELECT (col1, col2) FROM table2
+    SELECT (col1, col2) FROM table2
 ```
 
 > 还可以利用查出得到的数据直接创建新表，详见表的创建章节
@@ -252,7 +252,7 @@ WHERE id = 1;
 ## 更新多个列时只需要一个 SET
 UPDATE customers
 SET cust_name = 'The Fudds ',
-	cust_email = 'e1mer@fudd. com'
+    cust_email = 'e1mer@fudd. com'
 WHERE cust_id = 10005;
 ```
 
@@ -272,11 +272,11 @@ TRUNCATE TABLE mytable;
 使用更新和删除操作时一定要用 WHERE 子句，不然会把整张表的数据都破坏。**可以先用 SELECT 语句测试影响范围。**
 
 >  **DELETE、TRUNCATE 和 DROP**
->
+> 
 > DELETE 删除表中 WHERE 语句指定的数据。
->
+> 
 > InnoDB 数据库在使用 delete 进行删除操作的时候，只会将已经删除的数据标记为删除，并没有把数据文件删除，因此并不会彻底的释放空间。这些被删除的数据会被保存在一个链接清单中，当有新数据写入的时候，MySQL 会重新利用这些已删除的空间进行再写入。
->
+> 
 > 可以使用 OPTIMIZE TABLE 来回收未使用的空间，并整理数据文件的碎片。
 > 
 > ```sql
@@ -286,8 +286,6 @@ TRUNCATE TABLE mytable;
 > TRUNCATE 清空表：相当于删除表中的所有数据。会将表和索引占用的空间恢复到初始值。
 > 
 > DROP 删除表结构：会将表和索引占用的空间释放。
-
-
 
 ## 检索
 
@@ -330,8 +328,8 @@ LIMIT 2, 3;
 
 ## 排序
 
--   **ASC**  ：升序
--   **DESC** ：降序
+- **ASC**  ：升序
+- **DESC** ：降序
 
 可以按多个列进行排序，并且为每个列指定不同的排序方式：
 
@@ -342,7 +340,7 @@ ORDER BY col1 DESC, col2 ASC;
 ```
 
 > + 可以用没有选择的列来排序，这是合法的
->
+> 
 > + 不指定 ORDERED BY 的话，不保证顺序：https://www.zhihu.com/question/19726583
 
 ## 过滤数据 （使用 where）
@@ -357,16 +355,16 @@ WHERE col IS NULL;
 
 下表显示了 WHERE 子句可用的操作符
 
-|     操作符      |     说明     |
-| :-------------: | :----------: |
-|        =        |     等于     |
-|      &lt;       |     小于     |
-|      &gt;       |     大于     |
-| &lt;&gt;     != |    不等于    |
-| &lt;=     !&gt; |   小于等于   |
-| &gt;=     !&lt; |   大于等于   |
-|     BETWEEN     | 在两个值之间 |
-|     IS NULL     |  为 NULL 值  |
+| 操作符             | 说明       |
+|:---------------:|:--------:|
+| =               | 等于       |
+| &lt;            | 小于       |
+| &gt;            | 大于       |
+| &lt;&gt;     != | 不等于      |
+| &lt;=     !&gt; | 小于等于     |
+| &gt;=     !&lt; | 大于等于     |
+| BETWEEN         | 在两个值之间   |
+| IS NULL         | 为 NULL 值 |
 
 >  应该注意到，NULL 与 0、空字符串都不同。
 
@@ -380,10 +378,10 @@ WHERE col IS NULL;
 
 通配符也是用在过滤语句中，但它只能用于**文本字段**。
 
--   **%**    匹配 \>=0 个任意字符；
--   **\_**      匹配 ==1 个任意字符；
--   **[ ]**    匹配集合内的一个字符，例如 [ab] 将匹配字符 a 或者 b。
--   **[^]**   匹配不在括号所列之内的单个字符
+- **%**    匹配 \>=0 个任意字符；
+- **\_**      匹配 ==1 个任意字符；
+- **[ ]**    匹配集合内的一个字符，例如 [ab] 将匹配字符 a 或者 b。
+- **[^]**   匹配不在括号所列之内的单个字符
 
 使用 Like 操作符来进行通配符匹配。
 
@@ -396,7 +394,7 @@ WHERE col LIKE '[^AB]%'; -- 不以 A 和 B 开头的任意文本
 > 不要滥用通配符，通配符位于开头处匹配会非常慢。
 
 > MySQL 支持正则表达式的一个子集，利用 REGEXP 关键字，例如
->
+> 
 > ```sql
 > WHERE prod_name REGEXP '\\([O-9] sticks?\\)'
 > ```
@@ -406,19 +404,19 @@ WHERE col LIKE '[^AB]%'; -- 不以 A 和 B 开头的任意文本
 在数据库服务器上完成数据的转换和格式化的工作往往比客户端上快得多，并且转换和格式化后的数据量更少的话可以减少网络通信量。
 
 + 段拼接
-
+  
   MySQL 使用 Concat() 函数，而很多 DBMS 都用 + 或者 || 实现。
-
+  
   <img src="image-20220216174257835.png" alt="image-20220216174257835" style="zoom:50%;" />
-
+  
   > 可以用 TRIM('abc  ') = 'abc' 来去除多余空格
-
+  
   > 考虑到新创建出来的字段是没有列名的，通常需要用 AS 给他一个列明。
 
 + 算术计算
-
+  
   支持的基本算术操作符为 + - * /
-
+  
   <img src="image-20220216174413827.png" alt="image-20220216174413827" style="zoom:50%;" />
 
 ## 函数
@@ -427,17 +425,18 @@ WHERE col LIKE '[^AB]%'; -- 不以 A 和 B 开头的任意文本
 
 ### 汇总
 
-|         函 数         |           说 明            |
-| :-------------------: | :------------------------: |
-| AVG([distinct\|all]x) |      返回某列的平均值      |
+| 函 数                     | 说 明                 |
+|:-----------------------:|:-------------------:|
+| AVG([distinct\|all]x)   | 返回某列的平均值            |
 | COUNT([distinct\|all]x) | all]x)all]x)返回某列的行数 |
-|     MAX([distinct\|all]x)    |   all]x)返回某列的最大值   |
-|     MIN([distinct\|all]x)|   all]x)返回某列的最小值   |
-|     SUM([distinct\|all]x)  |    all]x)返回某列值之和    |
+| MAX([distinct\|all]x)   | all]x)返回某列的最大值      |
+| MIN([distinct\|all]x)   | all]x)返回某列的最小值      |
+| SUM([distinct\|all]x)   | all]x)返回某列值之和       |
 
 > AVG() 会忽略 NULL 行。
->
+> 
 > 使用 AVG(DISTINCT col1) 则可以计算  col1 中不同值的 AVG.
+> 
 > ```sql
 > SELECT AVG(DISTINCT col1) AS avg_col
 > FROM mytable;
@@ -445,41 +444,41 @@ WHERE col LIKE '[^AB]%'; -- 不以 A 和 B 开头的任意文本
 
 ### 文本处理
 
-|   函数   |      说明      |
-| :------: | :------------: |
-|  LEFT()  |   左边的字符   |
-| RIGHT()  |   右边的字符   |
+| 函数       | 说明      |
+|:--------:|:-------:|
+| LEFT()   | 左边的字符   |
+| RIGHT()  | 右边的字符   |
 | LOWER()  | 转换为小写字符 |
 | UPPER()  | 转换为大写字符 |
 | LTRIM()  | 去除左边的空格 |
 | RTRIM()  | 去除右边的空格 |
-| LENGTH() |      长度      |
+| LENGTH() | 长度      |
 
 ### 日期和时间处理（知道有就行了）
-
 
 - 日期格式：YYYY-MM-DD
 - 时间格式：HH:\<zero-width space\>MM:SS
 
-|     函 数     |             说 明              |
-| :-----------: | :----------------------------: |
-|   ADDDATE()   |    增加一个日期（天、周等）    |
-|   ADDTIME()   |    增加一个时间（时、分等）    |
-|   CURDATE()   |          返回当前日期          |
-|   CURTIME()   |          返回当前时间          |
-|    DATE()     |     返回日期时间的日期部分     |
-|  DATEDIFF()   |        计算两个日期之差        |
-|  DATE_ADD()   |     高度灵活的日期运算函数     |
-| DATE_FORMAT() |  返回一个格式化的日期或时间串  |
-|     DAY()     |     返回一个日期的天数部分     |
-|  DAYOFWEEK()  | 对于一个日期，返回对应的星期几 |
-|    HOUR()     |     返回一个时间的小时部分     |
-|   MINUTE()    |     返回一个时间的分钟部分     |
-|    MONTH()    |     返回一个日期的月份部分     |
-|     NOW()     |       返回当前日期和时间       |
-|   SECOND()    |      返回一个时间的秒部分      |
-|    TIME()     |   返回一个日期时间的时间部分   |
-|    YEAR()     |     返回一个日期的年份部分     |
+| 函 数           | 说 明             |
+|:-------------:|:---------------:|
+| ADDDATE()     | 增加一个日期（天、周等）    |
+| ADDTIME()     | 增加一个时间（时、分等）    |
+| CURDATE()     | 返回当前日期          |
+| CURTIME()     | 返回当前时间          |
+| DATE()        | 返回日期时间的日期部分     |
+| DATEDIFF()    | 计算两个日期之差        |
+| DATE_ADD()    | 高度灵活的日期运算函数     |
+| DATE_FORMAT() | 返回一个格式化的日期或时间串  |
+| DAY()         | 返回一个日期的天数部分     |
+| DAYOFWEEK()   | 对于一个日期，返回对应的星期几 |
+| HOUR()        | 返回一个时间的小时部分     |
+| MINUTE()      | 返回一个时间的分钟部分     |
+| MONTH()       | 返回一个日期的月份部分     |
+| NOW()         | 返回当前日期和时间       |
+| SECOND()      | 返回一个时间的秒部分      |
+| TIME()        | 返回一个日期时间的时间部分   |
+| YEAR()        | 返回一个日期的年份部分     |
+| LAST_DAY()    | 返回给定日期所在月份的最后一天 |
 
 ```sql
 mysql> SELECT NOW();
@@ -488,16 +487,16 @@ mysql> SELECT NOW();
 
 ### 数值处理
 
-|  函数  |  说明  |
-| :----: | :----: |
-| SIN()  |  正弦  |
-| COS()  |  余弦  |
-| TAN()  |  正切  |
+| 函数     | 说明  |
+|:------:|:---:|
+| SIN()  | 正弦  |
+| COS()  | 余弦  |
+| TAN()  | 正切  |
 | ABS()  | 绝对值 |
 | SQRT() | 平方根 |
-| MOD()  |  余数  |
-| EXP()  |  指数  |
-|  PI()  | 圆周率 |
+| MOD()  | 余数  |
+| EXP()  | 指数  |
+| PI()   | 圆周率 |
 | RAND() | 随机数 |
 
 ## 分组
@@ -523,7 +522,7 @@ GROUP BY col;
 GROUP BY 自动按分组字段进行排序，通过 ORDER BY **也可以按汇总字段来进行排序**。
 
 > 分组规定：
->
+> 
 > - GROUP BY 子句出现在 WHERE 子句之后，ORDER BY 子句之前，；
 > - **除了汇总字段外，SELECT 语句中的每一字段都必须在 GROUP BY 子句中给出**；
 > - NULL 的行会单独分为一组；
@@ -537,8 +536,6 @@ ORDER BY num;
 ```
 
 HAVING 可以过滤分组（基于分组字段和汇总字段），其支持所有 WHERE 支持的操作符
-
-
 
 **WHERE 过滤行**，**HAVING 过滤分组**，**行过滤应当先于分组过滤**。（或者理解为，WHERE 在分组之前进行过滤，然后分组，然后再用 HAVING 过滤）
 
@@ -575,13 +572,13 @@ ORDER BY cust_name;
 ```
 
 > 思考，如果先把 orders 按照 cust_id 先 group by 呢？这实际上就是先 GROUP BY 再和 Customers 表 join
->
+> 
 > 因为通常来说 Orders 表会大于 Customers 表，这样可能不需要每次遍历 Orders 表
->
+> 
 > ```sql
 > SELECT cust_name, cnt
 > FROM (
-> 	SELECT cust_id, COUNT(*)
+>     SELECT cust_id, COUNT(*)
 >     FROM Orders
 >     GROUP BY cust_id
 > ) AS t1 JOIN Customers AS t2 ON t1.cust_id = t2.cust_id
@@ -592,7 +589,7 @@ ORDER BY cust_name;
 使用 JOIN 关键字连接多个表，使用 ON 作为条件语句。
 
 > 连接可以替换子查询，并且比子查询的效率一般会更快。
->
+> 
 > 如果连接的时候不指定关键词，则左表每一行和右边每一行都匹配，生成了笛卡尔积，变成了 m * n 行
 
 ![preview](v2-f7aad00468b7241fa0bd71ff5e87aae0_r.jpg)
@@ -645,6 +642,8 @@ WHERE A.key = B.key;
 
 SQL NATURAL JOIN 是 EQUI JOIN 的一种，其结构方式是，关联表的同名列只会出现一次。
 
+自然连接是在两张表中寻找那些数据类型和列名都相同的字段，然后自动地将他们连接起来，并返回所有符合条件按的结果。如果做自然连接的两个表的有多个字段都满足有相同名称个类型，那么他们会被作为自然连接的条件。
+
 **Natural Join: Guidelines**
 
 + 关联表具有一对或多对同名列，且相同的列是相同的数据类型
@@ -669,29 +668,29 @@ ON Customers.cust_id = Orders.cust_id;
 customers 表：
 
 | cust_id | cust_name |
-| :-----: | :-------: |
-|    1    |     a     |
-|    2    |     b     |
-|    3    |     c     |
+|:-------:|:---------:|
+| 1       | a         |
+| 2       | b         |
+| 3       | c         |
 
 orders 表：
 
 | order_id | cust_id |
-| :------: | :-----: |
-|    1     |    1    |
-|    2     |    1    |
-|    3     |    3    |
-|    4     |    3    |
+|:--------:|:-------:|
+| 1        | 1       |
+| 2        | 1       |
+| 3        | 3       |
+| 4        | 3       |
 
 结果：
 
 | cust_id | cust_name | order_id |
-| :-----: | :-------: | :------: |
-|    1    |     a     |    1     |
-|    1    |     a     |    2     |
-|    3    |     c     |    3     |
-|    3    |     c     |    4     |
-|    2    |     b     |   Null   |
+|:-------:|:---------:|:--------:|
+| 1       | a         | 1        |
+| 1       | a         | 2        |
+| 3       | c         | 3        |
+| 3       | c         | 4        |
+| 2       | b         | Null     |
 
 ## 视图
 
@@ -717,7 +716,7 @@ where col5 = val;
 
 如果 MySQL 不能确定被更新的基数据，就不能更新视图（包括插入和删除）。但是各种 JOIN、聚集函数等都会导致不能更新视图。总之视图主要的作用是用来检索的（SELECT），而不是更新
 
-## 存储过程 
+## 存储过程
 
 存储过程可以看成是对一系列 SQL 操作的批处理。
 
@@ -807,7 +806,7 @@ create procedure myprocedure(out ret int)
 + 在 INSERT 触发器代码内，可引用一个名为 NEW 的虚拟表，访问被插入的行
 
 + 在 BEFORE INSERT触发器中，NEW 中的值也可以被更新（允许更改被插入的值)
-
+  
   对于AUTO_INCREMENT列，NEW 在 INSERT 执行之前包含0，在 INSERT 执行之后包含新的自动生成值。
 
 ### DELETE 触发器
@@ -816,7 +815,7 @@ create procedure myprocedure(out ret int)
 + OLD 中的值全都是只读的，不能更新。
 
 > 下面的例子演示使用 OLD 保存将要被删除的行到一个存档表中：
->
+> 
 > ```sql
 > CREATE TRIGGER deleteorder BEFORE DELETE ON orders
 > FOR EACH ROW
@@ -825,7 +824,7 @@ create procedure myprocedure(out ret int)
 >     VALUES (OLD.order_num，OLD.order_date，OLD.cust_id);
 > END;
 > ```
->
+> 
 > 如果 DELETE BEFORE 触发器执行出错，是不会继续 DELETE 的，这比较好。如果用的是 DELETE AFTER 触发器，不能正常执行，那 OLD 就丢了
 
 ### UPDATE 触发器
@@ -884,10 +883,8 @@ DEFAULT CHARACTER SET hebrew COLLATE hebrew_general_ci;
 ```sql
 SELECT *
 FROM mytable
-ORDER BY col COLLATE latin1_general_ci;
+ORDER BY col COLLATE latin1_general_ci; 
 ```
-
-## 
 
 ## 权限管理
 
@@ -951,5 +948,29 @@ REVOKE SELECT, INSERT ON mydatabase.* FROM myuser;
 必须使用 Password() 函数进行加密。
 
 ```sql
-SET PASSWROD FOR myuser = Password('new_password');
+SET PASSWROD FOR myuser = Password('new_password'); 
 ```
+
+# SQL 注入与防护
+
+> 防御SQL注入的方法总结 - 春分的文章 - 知乎
+> https://zhuanlan.zhihu.com/p/393925057
+> 
+> 浅谈如何防止sql注入 - 随风的文章 - 知乎
+> https://zhuanlan.zhihu.com/p/161711956
+
+1. 采用 sql 语句预编译和绑定变量，是防御 sql 注入的最佳方法
+   
+   + 采用了PreparedStatement，就会将sql语句："select id, no from user where id=?" **预先编译好**，也就是SQL引擎会预先进行**语法分析，产生语法树，生成执行计划**。
+   
+   + 后面你输入的参数，无论你输入的是什么，都不会影响该 sql 语句的语法结构了，因为语法分析已经完成了
+   
+   + 即使你后面输入了这些 sql 命令，也不会被当成 sql 命令来执行了，因为这些 sql 命令的执行，必须先得通过语法分析，生成执行计划，既然语法分析已经完成，已经预编译过了，那么后面输入的参数，是绝对不可能作为 sql 命令来执行的，只会被当做字符串字面值参数。
+
+2. 类型检查
+   
+   例如在接收到用户输入的参数时，我们就严格检查 id，只能是 int 型。
+
+3. 对特殊的字符进行转义
+   
+   比如在 MySQL 中我们可以对 " ' " 进行转义，这样就防止了一些恶意攻击者来闭合语句。
