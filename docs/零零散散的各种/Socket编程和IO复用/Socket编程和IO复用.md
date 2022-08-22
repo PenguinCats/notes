@@ -3,26 +3,25 @@
 ## TCP 与 UDP 编程流程与接口
 
 > socket编程 ----使用 TCP 协议的流程图 - 李点点的文章 - 知乎 https://zhuanlan.zhihu.com/p/466675391
->
+> 
 > https://www.mkssoftware.com/docs/man3/recvfrom.3.asp
 
 + 基于 TCP 的：
-
+  
   TCP 是传送字节流的服务，所以通常使用 read, **recv**, write, **send**。不过使用 sendto, recvfrom 也不是不可以（但是也不能通过 recvfrom 获取地址，因为 connect 的时候已经绑过了，在实现上，就没有给出）
-
+  
   > listen() 函数：主要作用就是**告知内核**将套接字 (sockfd) 变成被动的连接监听套接字（被动等待客户端的连接），可以通过参数设置内核中连接队列的长度，**TCP 三次握手也不是由这个函数完成，listen() 的作用仅仅告诉内核一些信息。**listen()函数不会阻塞，当有一个客户端主动连接（connect），Linux **内核就自动完成 TCP 三次握手**，将建立好的链接自动存储到**队列**中，如此重复。
-  >
-  >
+  > 
   > accept() 函数功能是，从处于 established 状态的连接队列头部取出一个已经完成的连接，如果这个队列没有已经完成的连接，accept() 函数就会阻塞，直到取出队列中已完成的用户连接为止。
-
+  
   > https://blog.csdn.net/tennysonsky/article/details/45621341/
-  >
+  > 
   > https://stackoverflow.com/questions/26909982/using-write-read-on-udp-socket
-
+  
   ![img](70.jpeg)
 
 + 基于 UDP 的
-
+  
   ![img](v2-421882dccd0fdd11372647311fbb37d6_b.jpg)
 
 ## Unix 五大网络 IO 模型
@@ -57,9 +56,9 @@ ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *
 <img src="image-20220214213019747.png" alt="image-20220214213019747" style="zoom:50%;" />
 
 > socket() 函数创建的套接字默认是阻塞的，可通过设置参数 SOCK_NONBLOCK 使其变为非阻塞：
->
+> 
 > https://man7.org/linux/man-pages/man2/socket.2.html
->
+> 
 > ```text
 > int s = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);  
 > ```
@@ -87,9 +86,9 @@ IO 复用方式下，单个 process (thread) 可以同时处理多个网络连�
 <img src="image-20220214213919420.png" alt="image-20220214213919420" style="zoom:50%;" />
 
 > https://www.itzhai.com/articles/it-seems-not-so-perfect-signal-driven-io.html
->
+> 
 > 信号驱动式 IO 对于 TCP 套接字产生的作用不大。因为该信号在 TCP 套接字中产生的过于频繁。进程对该信号一头雾水，没法确定套接字具体发生了什么事情。不过**可以对 TCP 监听套接字可以使用 SIGIO**，因为对于监听套接字，产生SIGIO信号的唯一条件是某个新连接完成了。这样就可以在SIGIO信号处理函数中获取新连接了。
->
+> 
 > 在UDP套接字中，只有 数据报到达套接字 和 套接字上发生异步错误 会产生SIGIO信号，只需要相应处理即可
 
 ### 异步 IO
@@ -99,7 +98,7 @@ IO 复用方式下，单个 process (thread) 可以同时处理多个网络连�
 异步 I/O 与信号驱动 I/O 的区别在于，**异步 I/O 的信号是通知应用进程 I/O 完成**，而**信号驱动 I/O 的信号是通知应用进程可以开始 I/O**。
 
 > https://man7.org/linux/man-pages/man3/aio_read.3.html
->
+> 
 > https://man7.org/linux/man-pages/man7/aio.7.html
 
 ```c
@@ -131,9 +130,9 @@ struct aiocb {
 select/poll/epoll
 
 > IO 多路复用是什么意思？ - 小林coding的回答 - 知乎 https://www.zhihu.com/question/32163005/answer/1802684879
->
+> 
 > 下面所提到的 sockfd 是针对网络 IO 的，其实对于普通文件的文件描述符 file descriptor，也是一样的。
->
+> 
 > 一些代码示例：彻底理解 IO多路复用 - caspar的文章 - 知乎 https://zhuanlan.zhihu.com/p/150972878
 
 ### select
@@ -373,7 +372,7 @@ int tcp_rcv_established(struct sock *sk, struct sk_buff *skb,
 1. 把自己的 epitem 添加到 epoll 的就绪队列中。
 
 2. 查看 eventpoll 对象上的等待队列里是否有等待项（epoll_wait 执行的时候会设置）。如果有等待项，那就查找到等待项里设置的回调函数。总之会唤醒阻塞的用户进程。
-
+   
    ![img](v2-4a4abcce05720f330679103150d26f43_1440w.jpg)
 
 ```c
@@ -422,7 +421,7 @@ client连接服务器，服务器有一个线程阻塞的调用 accept，accept 
 
 <img src="v2-b446dcdb8f75d1d70cd46ff9dce0f7fb_r.jpg" alt="preview" style="zoom:67%;" />
 
-### 多 Reactor 
+### 多 Reactor
 
 在单 Reactor中，其要同时响应所有的事件，如果 IO 连接，读写都很多，可能会出现处理不过来的情况。（毕竟涉及到状态维护之类的？）
 
@@ -435,3 +434,45 @@ main reactor 一直在监听连接事件，如果有连接建立，main reactor 
 > 为了防止单个 sub-reactor 线程出错，还是考虑选用多进程的多 reactor。nginx 就是多进程 reactor 
 
 ![img](webp.webp)
+
+## Go 的网络模型
+
+> **Go netpoller 的价值**
+> 
+> https://strikefreedom.top/archives/go-netpoll-io-multiplexing-reactor#toc-head-18https://strikefreedom.top/archives/go-netpoll-io-multiplexing-reactor#toc-head-18
+> 
+> 通过前面对源码的分析，我们现在知道 Go netpoller 依托于 runtime scheduler，为开发者提供了一种强大的同步网络编程模式；然而，Go netpoller 存在的意义却远不止于此，Go netpoller I/O 多路复用搭配 Non-blocking I/O 而打造出来的这个原生网络模型，它最大的价值是把网络 I/O 的控制权牢牢掌握在 Go 自己的 runtime 里，关于这一点我们需要从 Go 的 runtime scheduler 说起
+> 
+> Go netpoller 是为了避免让操作网络 I/O 的 goroutine 陷入到系统调用从而进入内核态，因为一旦进入内核态，整个程序的控制权就会发生转移(到内核)，不再属于用户进程了，那么也就无法借助于 Go 强大的 runtime scheduler 来调度业务程序的并发了；而有了 netpoll 之后，借助于非阻塞 I/O ，G 就再也不会因为系统调用的读写而 (长时间) 陷入内核态，当 G 被阻塞在某个 network I/O 操作上时，实际上它不是因为陷入内核态被阻塞住了，而是被 Go runtime 调用 gopark 给 park 住了，此时 G 会被放置到某个 wait queue 中，而 M 会尝试运行下一个 _Grunnable 的 G，如果此时没有 _Grunnable 的 G 供 M 运行，那么 M 将解绑 P，并进入 sleep 状态。当 I/O available，在 epoll 的 eventpoll.rdr 中等待的 G 会被放到 eventpoll.rdllist 链表里并通过 netpoll 中的 epoll_wait 系统调用返回放置到全局调度队列或者 P 的本地调度队列，标记为 _Grunnable ，等待 P 绑定 M 恢复执行。
+
+Go 基于 I/O multiplexing 和 goroutine scheduler 构建了一个简洁而高性能的原生网络模型(基于 Go 的 I/O 多路复用 `netpoller` )，提供了 `goroutine-per-connection` 这样简单的网络编程模式。
+
+在这种模式下，开发者使用的是同步的模式去编写异步的逻辑，极大地降低了开发者编写网络应用时的心智负担，且借助于 Go runtime scheduler 对 goroutines 的高效调度，这个原生网络模型不论从适用性还是性能上都足以满足绝大部分的应用场景。
+
+**一句话概括：每个 socket 用一个 goroutine 去处理，read 的时候是阻塞的，但是不是系统线程级别的阻塞，而是不调度该 goroutine，底层多个 socket 用 IO 多路复用（+回调？）的形式实现**。
+
+这里有一个问题：为什么 golang 的网络 io 要阻塞用户层面 io，而在底层用多路复用。直接用阻塞的 io 效果不一样吗？
+
+有一个猜想：
+
+1. 从以前线程的角度来看，一个 IO 一个线程肯定开销太大了，依靠**系统级别进程的阻塞+唤醒**，代价比较高。
+
+2. 那让用户自己去写 IO 多路复用吧。那有点麻烦啊。。。你要自己处理这些逻辑，epoll 注册之类的。能不能帮用户搞一下？
+   
+   诶！我来给用户包装一下。用户以同步的方式，以 `goroutine-per-connection` 的体验去处理各个 socket。底层依靠 IO 多路复用，我只需要将这个 Goroutine park 住就好了，不会导致 P 和 M 的绑定关系变化，不会进入内核态进行线程切换，也不影响同一个 P 中的其他 Goroutine。
+   
+   相比较底层不采用 IO 多路复用的形式，将用户层面的同步阻塞下放到系统线程层面的阻塞，为了不阻塞其他的 Goroutine，会导致 P 绑定到新的 M 上，且发生了系统线程切换，带来了开销。
+
+### gnet
+
+`goroutine-per-connection` 这种模式虽然简单高效，但是在某些极端的场景下也会暴露出问题：goroutine 虽然非常轻量，它的自定义栈内存初始值仅为 2KB，后面按需扩容；海量连接的业务场景下， goroutine-per-connection ，此时 goroutine 数量以及消耗的资源就会呈线性趋势暴涨。
+
+在绝大部分应用场景下，推荐大家还是遵循 Go 的 best practices，使用原生的 Go 网络库来构建自己的网络应用。然而，在某些极度追求性能、压榨系统资源的业务场景下，我们可以考虑自己构建 Reactor 网络模型。这里介绍一个 **gnet**
+
+gnet 是一个基于事件驱动的高性能和轻量级网络框架。它直接使用 epoll 和 kqueue 系统调用而非标准 Go 网络包 net 来构建网络应用，这也使得在某些极端的网络业务场景（比如海量连接、高频短连接、网络小包等等场景）gnet 达到了一个远超 Go net 的性能表现。
+
+gnet 已经实现了 Multi-Reactors 和 Multi-Reactors + Goroutine Pool 两种网络模型，避免了一个 connection 就创建一个 goroutine。
+
+![](https://raw.githubusercontent.com/panjf2000/illustrations/master/go/multi-reactors.png)
+
+![](https://raw.githubusercontent.com/panjf2000/illustrations/master/go/multi-reactors%2Bthread-pool.png)
