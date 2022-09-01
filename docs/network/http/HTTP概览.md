@@ -85,8 +85,6 @@ UPDATE my_table SET price=price+50,version=version+1 WHERE id=1 AND version=5
 
 上面 `WHERE` 后面跟着条件 `id=1 AND version=5` 被执行后，`id=1` 的 `version` 被更新为 `6`，所以如果重复执行该条 SQL 语句将不生效，因为 `id=1 AND version=5` 的数据已经不存在，这样就能保住更新的幂等，多次更新对结果不会产生影响。
 
-
-
 ## 不保存状态
 
 Http 是不保存状态的协议，即无状态协议。HTTP 协议自身不对请求和响应之间的通信状态进行保存。在 HTTP 这个级别，协议对于发送过的请求和响应都不做持久化处理。（之后引入了 cookie, token 等）
