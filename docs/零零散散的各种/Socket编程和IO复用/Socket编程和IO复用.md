@@ -63,6 +63,16 @@ ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *
 > int s = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);  
 > ```
 
+这玩意干吗用的？
+
+1. read 的时候不等到指定的字节全部读完才返回，而是把缓冲区里的数据立即返回。
+   
+   如果缓冲区为空，也立刻返回，值为 -1，不会阻塞（比如你轮询键盘鼠标的输入比较有用？）
+
+2. write 时，可能缓冲区不够放下所有数据，那就能写多少写多少，返回你实际写的字节数
+
+![](https://img-blog.csdnimg.cn/img_convert/ade7cc7e016d25b699ffeaa77e918eef.png)
+
 ### IO 复用
 
 > IO多路复用到底是不是异步的？ - 闪客sun的回答 - 知乎 https://www.zhihu.com/question/59975081/answer/1932776593
@@ -139,7 +149,7 @@ select/poll/epoll
 
 select 实现多路复用的方式是，将已连接的 Socket 都放到一个**sockfd集合**，然后调用 select 函数将 sockfd 集合**拷贝**到内核里，让内核来检查是否有网络事件产生，检查的方式很粗暴，就是通过**遍历** sockfd 集合的方式，当检查到有事件产生后，将此 Socket 标记为可读或可写， 接着再把整个 sockfd 集合**拷贝**回用户态里，然后用户态还需要再通过**遍历**的方法找到可读或可写的 Socket，然后再对其处理。
 
-所以，对于 select 这种方式，需要进行 **2 次「遍历」sockfd 集合**，一次是在内核态里，一个次是在用户态里 ，而且还会发生 **2 次「拷贝」sockfd集合**，先从用户空间传入内核空间，由内核修改后，再传出到用户空间中。select 使用固定长度的 BitsMap 表示 sockfd 集合，而且所支持的文件描述符的个数是有限制的，**在 Linux 系统中， 默认最大值为 `1024`**。
+所以，对于 select 这种方式，需要**多次「遍历」sockfd 集合**，一个是在内核态里，一个次是在用户态里 ，而且还会发生 **2 次「拷贝」sockfd集合**，先从用户空间传入内核空间，由内核修改后，再传出到用户空间中。select 使用固定长度的 BitsMap 表示 sockfd 集合，而且所支持的文件描述符的个数是有限制的，**在 Linux 系统中， 默认最大值为 `1024`**。
 
 ```c
 int select(int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
@@ -411,9 +421,9 @@ client连接服务器，服务器有一个线程阻塞的调用 accept，accept 
 
 ![preview](v2-d9d08263bd06ae7d23d1c297b8b4719e_r.jpg)
 
-### 单reacotor +消息队列+多线程模型
+### 单reacotor +消息队列+多线程模型（线程池）
 
-跟 reactor + 单线程 的区别就是在业务逻辑处理的地方加了消息队列，接收到的消息放入接收消息队列，然后业务线程从该队列取消息进行业务处理**（业务线程数量最好是跟cpu核心数，业务线程中基本没有了IO操作）**，业务线程处理完后，将需要回复的消息放入发送队列中，当有可发送事件触发时，epoll 从发送队列取消息发送。
+跟 reactor + 单线程 的区别就是在业务逻辑处理的地方加了消息队列，接收到的消息放入接收消息队列，然后业务线程从该队列取消息进行业务处理 **（业务线程数量最好是跟cpu核心数，业务线程中基本没有了IO操作）** ，业务线程处理完后，将需要回复的消息放入发送队列中，当有可发送事件触发时，epoll 从发送队列取消息发送。
 
 相比 单 reactor + 单线程，**解决了业务逻辑重的问题**。
 
