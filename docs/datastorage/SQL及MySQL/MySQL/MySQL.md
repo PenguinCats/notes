@@ -581,6 +581,23 @@ customer_id_selectivity: 0.0373
 - 一些存储引擎（例如 MyISAM）在内存中只缓存索引，而数据依赖于操作系统来缓存。因此，只访问索引可以不使用系统调用（通常比较费时）。
 - **对于 InnoDB 引擎，若辅助索引能够覆盖查询，则无需访问主索引**。
 
+### 读大数据 —— 流式读取
+
+> 大数据量查询容易OOM？试试MySQL流式查询 - 慕课网的文章 - 知乎
+> https://zhuanlan.zhihu.com/p/352838907
+
+程序访问 MySQL 数据库时，当查询出来的数据量特别大时，数据库驱动把加载到的数据全部加载到内存里，就有可能会导致内存溢出（OOM）。在 MySQL 数据库中提供了流式查询，允许把符合条件的数据分批一部分一部分地加载到内存中，可以有效避免 OOM。
+
+例如，以 JAVA JDBC 为例，使用JDBC的 `PreparedStatement/Statement` 的 `setFetchSize` 方法设置为 `Integer.MIN_VALUE` 或者使用方法 `Statement.enableStreamingResults()` 可以实现流式查询，在执行 `ResultSet.next()` 方法时，会通过数据库连接一条一条的返回，这样也不会大量占用客户端的内存。
+
+> 可能也有别的优化？
+> 
+> Most SQL implementations have the notion of batches when reading. They load data from the disk as needed and keeps RAM usage low/constant as needed.
+> 
+> For example if you are selecting 1000 rows. The database may load the first 100 rows to the RAM. While you are calling `Next()`, for example when you reach the 50th row, the database grabs another hundred (rows 100 to 201 for example).
+> 
+> 可能还有服务端游标之类的东西？
+
 ## Innodb 的数据文件组织
 
 ![img](150104113477241.png)
