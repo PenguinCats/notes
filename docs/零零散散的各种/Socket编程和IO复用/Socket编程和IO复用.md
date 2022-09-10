@@ -403,7 +403,57 @@ static int ep_poll_callback(wait_queue_t *wait, unsigned mode, int sync, void *k
         wake_up_locked(&ep->wq);
 ```
 
-## 网路编程模型（不仅考虑了 IO）
+## 网络编程模型（不仅考虑了 IO）
+
+### Question：fork 之后，socket 会怎样？
+
+> 一个进程绑定了端口号后，创建子进程（fork），子进程是不是和父进程绑定了同一个端口号？ - 知乎
+> https://www.zhihu.com/question/360939266
+
+**子进程因为具有父进程的文件描述符副本，可以处理绑定到同样的端口上的连接。** 所以可以认为子进程和父进程绑定了同一个端口号
+
+**我们首先看 accept的问题**
+
+绑定到同一个端口这件事，上面的情况指的是在 bind() 之后的 fork 调用，在 bind 之前实际上你也可以，并且不限于父子级关系的进程。Linux 内核有一个 PORTREUSE 机制。
+
+假设你启动了一个进程，绑定 x 端口，并使用了 SO_REUSEPORT 参数。那么所有后续进程，只要同样使用 SO_REUSEPORT 绑定 x 端口，都可以成功启动，**内核会为这些进程公平的分配连接**，可以看成是一个内核级的负载均衡？需要注意的是，**这时候是有多个 socket 的，只是绑定了同一个端口而已**。
+
+> 个人猜测，按理说不会带来惊群效应？
+
+![preview](https://pic1.zhimg.com/v2-9f924c88e27b1b55b516d8e93f6e83d8_r.jpg?source=1940ef5c)
+
+
+
+在 bind() 之后 fork 出来的所有子进程，也可以处理传入的连接，**不过要通过加锁或互斥来实现连接分配（也就是自行实现负载均衡）**。
+
+每个子进程都可以去 accept 这个套接字，当有连接进来的时候，所有进程的 accept 都会返回，但是只有一个能够成功，其它都会失败，这个叫惊群效应。Nginx 对此有一定的优化，似乎是通过信号量之类的方式，只有争夺到的进程才能 accept。
+
+![preview](https://pic2.zhimg.com/v2-0212d132a16bb60c67bd57bf91efb964_r.jpg?source=1940ef5c)
+
+**关于已经 accept 的 socket 的 write read 操作**
+
+> socket套接字在多线程发送数据时要加锁吗？ - 陈硕的回答 - 知乎
+> https://www.zhihu.com/question/56899596/answer/150926723
+> 
+> socket套接字在多线程发送数据时要加锁吗？ - 笔默纸言的回答 - 知乎
+> https://www.zhihu.com/question/56899596/answer/1161802619
+
+所以一个好的tcp socket处理框架，应该是只有一个线程来负责数据的收发，从而避免那些无穷无尽的同步问题。
+
+
+
+- 对于 UDP，多线程读写同一个 socket 不用加锁，不过更好的做法是每个线程有自己的 socket，避免 contention，可以用 SO_REUSEPORT 来实现这一点。
+- 对于 TCP，通常多线程读写同一个 socket 是错误的设计，因为有 short write 的可能（对于非阻塞 IO，当发送缓冲区的剩余空间大小不足以容纳发送数据大小的时候，此时只会发送部分数据，并且生成错误码`EAGAIN`，此时就产生了short write现象）。
+  
+  假如你加锁，而又发生 short write，你是不是要一直等到整条消息发送完才解锁（无论阻塞IO还是非阻塞IO）？如果这样，你的临界区长度由对方什么时候接收数据来决定，一个慢的 peer 就把你的程序搞死了。
+  
+  对于不加锁的情况，可能会出现消息交叉的情况，比如一个进程发 aaaa，另一个发 bbbb，接受的可能是 abab
+  
+  > 有大佬表示：
+  > 
+  > 我们团队以前踩过这个坑。原因如下：tcp_sendmsg 的确会持有 lock_sock 锁，但在申请 sendbuf 时如果遇上内存不足的情况，会进入 sk_wait_event，在此期间会 release_sock，别的线程可能正好能够进入关键路径。
+
+
 
 ### 阻塞IO+多线程
 
