@@ -422,8 +422,6 @@ static int ep_poll_callback(wait_queue_t *wait, unsigned mode, int sync, void *k
 
 ![preview](https://pic1.zhimg.com/v2-9f924c88e27b1b55b516d8e93f6e83d8_r.jpg?source=1940ef5c)
 
-
-
 在 bind() 之后 fork 出来的所有子进程，也可以处理传入的连接，**不过要通过加锁或互斥来实现连接分配（也就是自行实现负载均衡）**。
 
 每个子进程都可以去 accept 这个套接字，当有连接进来的时候，所有进程的 accept 都会返回，但是只有一个能够成功，其它都会失败，这个叫惊群效应。Nginx 对此有一定的优化，似乎是通过信号量之类的方式，只有争夺到的进程才能 accept。
@@ -440,9 +438,8 @@ static int ep_poll_callback(wait_queue_t *wait, unsigned mode, int sync, void *k
 
 所以一个好的tcp socket处理框架，应该是只有一个线程来负责数据的收发，从而避免那些无穷无尽的同步问题。
 
-
-
 - 对于 UDP，多线程读写同一个 socket 不用加锁，不过更好的做法是每个线程有自己的 socket，避免 contention，可以用 SO_REUSEPORT 来实现这一点。
+
 - 对于 TCP，通常多线程读写同一个 socket 是错误的设计，因为有 short write 的可能（对于非阻塞 IO，当发送缓冲区的剩余空间大小不足以容纳发送数据大小的时候，此时只会发送部分数据，并且生成错误码`EAGAIN`，此时就产生了short write现象）。
   
   假如你加锁，而又发生 short write，你是不是要一直等到整条消息发送完才解锁（无论阻塞IO还是非阻塞IO）？如果这样，你的临界区长度由对方什么时候接收数据来决定，一个慢的 peer 就把你的程序搞死了。
@@ -452,8 +449,6 @@ static int ep_poll_callback(wait_queue_t *wait, unsigned mode, int sync, void *k
   > 有大佬表示：
   > 
   > 我们团队以前踩过这个坑。原因如下：tcp_sendmsg 的确会持有 lock_sock 锁，但在申请 sendbuf 时如果遇上内存不足的情况，会进入 sk_wait_event，在此期间会 release_sock，别的线程可能正好能够进入关键路径。
-
-
 
 ### 阻塞IO+多线程
 

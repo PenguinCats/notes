@@ -602,11 +602,53 @@ customer_id_selectivity: 0.0373
 
 ![img](150104113477241.png)
 
-数据库表空间由段（segment）、区(extent)、页(page)组成，默认情况下有一个共享表空间 ibdata1,如使用了 innodb_file_per_table 则每张表有独立表空间（指存放数据、索引等内容的地方）
+数据库表空间（table space）由段（segment）、区(extent)、页(page)组成。
 
-+ 段包括了数据段（B+树的叶子结点）、索引段、回滚段 等
-+ 区，由连续的页组成，任何情况下每个区都为 1M，一个区中有64个连续页（16k）
-+ 页，数据页（B-tree Node）默认大小为 16KB （文件系统一页通常大小为4KB，硬盘中每个扇区的大小通常为 512 字节）
+### table space 表空间
+
+`tablespace`就是我们平时所说的表空间。它是一个物理概念，对应到磁盘上，就是一个个数据文件。innodb 存储引擎的表空间对应的数据文件和索引是放在一个文件中的，而 myisam 存储引擎的表对应的数据文件和索引文件是两个分开的数据文件
+
+默认情况下有一个共享表空间 。如使用了 innodb_file_per_table 则每张表有独立表空间（指存放数据、索引等内容的地方）
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20201230160526667.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2phdmFhbmRkb25ldA==,size_16,color_FFFFFF,t_70)
+
+常见的表空间有如下几类
+
++ System Tablespace：系统表空间
+  
+  ibdata1（其实就是一个文件`/var/lib/mysql/ibdata1` 噢）
+
++ Undo Tablespace：回滚表空间
+  
+  默认这个空间是和系统表空间共用一个表空间的，它不会单独存在，和`ibdata1`系统表空间文件存在一起。
+  
+  从提升MySQL性能的角度上来看，为了减少磁盘 I/O 的竞争，所以建议把回滚表空间和系统表空间分开存放
+
++ Redo Log Tablespace：日志表空间
+
++ General Tablespace：一般表空间，就是平时我们用于存储自己业务表中的数据用的表空间文件。这里需要注意的是目前很少使用这种以便的表空间了，因为它是多张表共用一个数据表空间文件
+
++ File-Pre-Table Tablespace：用来存储我们的业务数据的表空间。
+
+### 数据段
+
+数据段是与数据库对象相对应，一般一个数据库对象对应一个数据段。段包括了：
+
++ 数据段（B+树的叶子结点）
+
++ 索引段
+
++ 回滚段 等。
+
+由一个或多个区组成，不要求区与区之间是相邻的。
+
+### 区
+
+由**连续的页组成**，任何情况下每个区都为 1M，一个区中有64个连续页（16k）
+
+### 页
+
+数据页（B-tree Node）默认大小为 16KB （文件系统一页通常大小为4KB，硬盘中每个扇区的大小通常为 512 字节）
 
 ## Innodb 的 内存池和 buffer
 

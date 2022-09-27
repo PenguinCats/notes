@@ -423,6 +423,39 @@ Redis Cluster使用 Gossip协议 维护节点的元数据信息，这种协议�
 + **pong消息** 是在节点接收到meet、ping消息后回复给发送节点的响应消息，告诉发送方本次通信正常，消息包含当前节点状态。
 + **fail消息** 是在节点认为集群内另外某一节点下线后向集群内所有节点广播的消息。
 
+#### redis cluster 的时候，热 key 怎么办？
+
+> 如何处理redis集群的hot key和big key - Akay的文章 - 知乎
+> https://zhuanlan.zhihu.com/p/52393940
+
+在一段时间内，该 key 的访问量远远高于其他的 key， 导致大部分的访问流量在经过 hash 计算之后，都集中到某一个 redis 实例上。
+
+1. client 使用本地缓存
+
+2. 利用分片算法的特性，对 key 进行打散处理
+   
+   可以给 hot key 加上前缀或者后缀，把一个 hot key 的数量变成 redis 实例个数 N 的倍数 M，从而由访问一个 redis key  变成访问 N * M 个redis key。 N*M 个 redis key 经过分片分布到不同的实例上，将访问量均摊到所有实例。
+
+3. redis cluster 的每个 cluster 其实也可以有 slave
+
+#### redis cluster 的时候，mget 怎么办？
+
+> 得物技术浅谈Redis集群下mget的性能问题 - SmartCode得物技术的文章 - 知乎
+> https://zhuanlan.zhihu.com/p/401929191
+
+在 java spring Lettuce pool redis mget 源码里，整个mget操作其实分为了以下几步：
+
+1. 获取分区 slot 和 key 的映射关系，遍历出所需 key 对应的每个分区 slot。
+2. 判定，slot 个数是不是小于 2，也就是是否所有的 key 都在同一分区，如果是，发起一次 mge t命令，直接获取。
+3. 如果分区数量大于 2，keys 对应多个分区，**那么遍历所有分区，分别向 redis 发起 mget 请求获取数据**。
+4. 等待所有请求执行结束，重新组装结果数据，保持跟入参 key 的顺序一致，然后返回结果。
+
+看似一次 mget 方法调用，其实底层对应的是多次 redis 调用和多次 io 交互。有多次串行的 redis 调用。
+
+自然而然可以想到，是否可以用并行替代底层串行的逻辑。也就是将 mget 中的 keys，根据 slot 分片规则，先 groupBy 一下，然后用多线程的方式并行执行。
+
+![preview](https://pic4.zhimg.com/v2-95629e520f8eba96f5bb0e96e529d8ab_r.jpg)
+
 #### 故障发现 & 节点晋升
 
 ##### 故障发现
@@ -554,8 +587,6 @@ SET key value [EX seconds|PX milliseconds] [NX|XX] [KEEPTTL]
   获取锁的客户端给它一个递增的 fencing token。例如：客户端 1 先获取到的锁，因此有一个较小的 fencing token，等于 33，而客户端 2 后获取到的锁，有一个较大的 fencing token，等于 34。
   
   客户端 1 恢复过来之后，依然是向存储服务发送访问请求，但是带了 fencing token = 33。存储服务发现它之前已经处理过 34 的请求，所以会拒绝掉这次 33 的请求。这样就避免了冲突。
-  
-  
 
 ### Redission
 
@@ -570,15 +601,11 @@ Redisson 提供了一个监控锁的看门狗，它的作用是在 Redisson 实�
 
 续期原理其实就是用lua脚本，将锁的时间重置为30s。
 
-
-
 看起来很简单，但实现起来并不容易
 
 - 和释放锁的情况一样，我们需要先判断持有锁客户端是否有变化。否则会造成无论谁持有锁，守护线程都会去重新设置锁的LockTime。
 - 守护线程要在合理的时间再去重新设置锁的LockTime，否则会造成资源的浪费。不能动不动就去续。
 - 如果持有锁的线程已经处理完业务了，那么守护线程也应该被销毁。不能业务运行结束了，守护者还在那里继续运行，浪费资源。
-
-
 
 ## 数据类型
 
